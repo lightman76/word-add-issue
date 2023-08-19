@@ -33,12 +33,9 @@
 
 
   button1.addEventListener("click", function() {
-    console.log("preparing to create content control 1")
     Word['run'](async function(context) {
       var doc = context.document;
-      console.log("preparing to create content control 2")
       var ccs = doc.contentControls.getByTag("EXAMPLE_TAG1");
-      console.log("preparing to create content control 3")
       ccs.load('appearance,' +
           'cannotDelete,' +
           'cannotEdit,' +
@@ -54,12 +51,9 @@
           'font/size,' +
           'font/name,' +
           'font/color');
-      console.log("preparing to create content control 4")
       await context.sync();
-      console.log("preparing to create content control 5",ccs.items.length)
       var cc = null;
       if (ccs.items.length > 0) cc = ccs.items[ccs.items.length - 1]; //always get the last one - should only ever actually be one, but just in case...
-      console.log("preparing to create content control 6")
       if (!cc) {
         console.log("No content control found")
         let doc = context.document;
@@ -71,17 +65,13 @@
 
         let ccRange = pageTitleParagraph.getRange(Word.RangeLocation.after);
         let ccParagraph = ccRange.insertParagraph("",Word.InsertLocation.after);
-        console.log("preparing to create content control 7")
         cc = ccParagraph.insertContentControl();
-        console.log("preparing to create content control 8")
         cc.cannotDelete = false;
         cc.title = "Test Content Control";
         cc.tag = "EXAMPLE_TAG1";
         cc.cannotEdit = true;
-        console.log("preparing to create content control 9")
         try {
           await context.sync();
-          console.log("preparing to create content control 10")
           return fillContent(context, cc);
         } catch(e){
           console.error("Failed to create content control during sync",e)
@@ -129,7 +119,7 @@
   });
 
   async function fillContent(context, cc) {
-    console.log("fillContent 1")
+    console.log("fillContent start")
     cc.cannotEdit = false;
     for(let i=0; i < 4; i++) {
       let entryPara = cc.insertParagraph("", Word.InsertLocation.end);
@@ -141,11 +131,10 @@
       let exampleText = "Example Text entry "+entryId+". All work and no play makes Jack a dull boy.   <b>All work and no play makes Jack a dull boy.</b>   All work and no play makes Jack a dull boy.   <i>All work and no play makes Jack a dull boy.</i>   All work and no play makes Jack a dull boy.   <u>All work and no play makes Jack a dull boy.</u>";
       entryPara.insertHtml(exampleText, Word.InsertLocation.end);
     }
-    console.log("fillContent 2")
     cc.cannotEdit = true;
     try {
       await context.sync();
-      console.log("fillContent 3")
+      console.log("fillContent completed")
     } catch(e) {
       console.error("fillContent: sync failed",e);
     }
