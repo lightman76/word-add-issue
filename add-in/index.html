@@ -10,9 +10,22 @@
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="application/javascript"></script>
 </head>
 <body class="" style="background-color: #ddd;">
-<button id="button1">Fill content control</button><br><br>
+<button id="button1">Insert Entries into content control</button><br><br>
 <button id="button2">Clear content control</button><br><br>
-<p>This will create a content control if it doesn't already exist and add content to it</p>
+<p style=" margin-top: 10px;">The first button creates the content control if it doesn't exist yet.  It then inserts 4 numbered entries in increasing order.  Clicking again will add another 4 entries in increasing order.</p>
+<p>Demonstrating several issues I'm going to be reporting with this example.</p>
+
+<p style="font-weight: bold; margin-top: 10px;">Content Control Insertion Order</p>
+<p>In Desktop versions of Office 365 Word, the entries are inserted in the correct increasing order (1,2,3,4).</p>
+<p>In Office 365 Online Word, each batch of entries gets inserted in reverse order (4,3,2,1).</p>
+
+<p style="font-weight: bold; margin-top: 10px;">Formatting</p>
+<p>In Desktop versions of Office 365 Word, the paragraphs in the content control have a hanging indent and are double spaced as the code instructs.</p>
+<p>In Office 365 Online Word, the paragraphs in the content control ignores all formatting instructions applied to the paragraph.</p>
+
+<p style="font-weight: bold; margin-top: 10px;">Content Control cannotDelete property</p>
+<p>In Desktop versions of Office 365 Word, the content control can be deleted by the user when the <code>cannotDelete</code> property is set to false.</p>
+<p>In Office 365 Online Word, the content control can NOT be deleted by the user regardless of the setting of the <code>cannotDelete</code> property.</p>
 
 
 <script>
@@ -58,13 +71,14 @@
         console.log("No content control found")
         let doc = context.document;
         let endOfBodyRange = doc.body.getRange(Word.RangeLocation.end);
-        let pageTitleParagraph = endOfBodyRange.insertParagraph('Content Control appears below', Word.InsertLocation.after);
-        pageTitleParagraph.alignment = Word.Alignment.centered;
+
+        let ccRange = endOfBodyRange.insertParagraph('', Word.InsertLocation.after);
+        let ccParagraph = ccRange.insertParagraph("",Word.InsertLocation.after);
+
+        //Find end after adding this and add another paragraph or else the insertion of the content control fails...
         endOfBodyRange = doc.body.getRange(Word.RangeLocation.end);
         var emptyParagraph = endOfBodyRange.insertParagraph("", Word.InsertLocation.after);
 
-        let ccRange = pageTitleParagraph.getRange(Word.RangeLocation.after);
-        let ccParagraph = ccRange.insertParagraph("",Word.InsertLocation.after);
         cc = ccParagraph.insertContentControl();
         cc.cannotDelete = false;
         cc.title = "Test Content Control";
