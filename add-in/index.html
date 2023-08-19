@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+  <title>Office 365 bug example</title>
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <meta content="origin" name="referrer">
+
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="application/javascript"></script>
+</head>
+<body class="" style="background-color: #ddd;">
+<button id="button1">Fill content control</button><br><br>
+<button id="button2">Clear content control</button><br><br>
+<p>This will create a content control if it doesn't already exist and add content to it</p>
+
+
+<script>
+  var counter = 1;
+  var button1 = document.getElementById("button1");
+  var button2 = document.getElementById("button2");
+
+  Office.initialize = function (reason) {
+    console.log("app office initialize callback called!: " + reason)
+    OfficeExtension.config.extendedErrorLogging = true;
+    if (!Office.context.requirements.isSetSupported('WordApi', 1.3)) {
+      console.error("RUHROH - unsupported Word Version - need March 2017 or newer");
+      //TODO: make this a user visible error
+    } else {
+      setTimeout(function(){console.log("Updating office ready flag",reason);});
+    }
+  };
+
+
+  button1.addEventListener("click", function() {
+    console.log("preparing to create content control 1")
+    Word['run'](async function(context) {
+      var doc = context.document;
+      console.log("preparing to create content control 2")
+      var ccs = doc.contentControls.getByTag("EXAMPLE_TAG1");
+      console.log("preparing to create content control 3")
+      ccs.load('appearance,' +
+          'cannotDelete,' +
+          'cannotEdit,' +
+          'color,' +
+          'id,' +
+          'placeHolderText,' +
+          'removeWhenEdited,' +
+          'title,' +
+          'text,' +
+          'type,' +
+          'style,' +
+          'tag,' +
+          'font/size,' +
+          'font/name,' +
+          'font/color');
+      console.log("preparing to create content control 4")
+      await context.sync();
+      console.log("preparing to create content control 5",ccs.items.length)
+      var cc = null;
+      if (ccs.items.length > 0) cc = ccs.items[ccs.items.length - 1]; //always get the last one - should only ever actually be one, but just in case...
+      console.log("preparing to create content control 6")
+      if (!cc) {
+        console.log("No content control found")
+        let doc = context.document;
+        let endOfBodyRange = doc.body.getRange(Word.RangeLocation.end);
+        let pageTitleParagraph = endOfBodyRange.insertParagraph('Content Control appears below', Word.InsertLocation.after);
+        pageTitleParagraph.alignment = Word.Alignment.centered;
+        endOfBodyRange = doc.body.getRange(Word.RangeLocation.end);
+        var emptyParagraph = endOfBodyRange.insertParagraph("", Word.InsertLocation.after);
+
+        let ccRange = pageTitleParagraph.getRange(Word.RangeLocation.after);
+        let ccParagraph = ccRange.insertParagraph("",Word.InsertLocation.after);
+        console.log("preparing to create content control 7")
+        cc = ccParagraph.insertContentControl();
+        console.log("preparing to create content control 8")
+        cc.cannotDelete = false;
+        cc.title = "Test Content Control";
+        cc.tag = "EXAMPLE_TAG1";
+        cc.cannotEdit = true;
+        console.log("preparing to create content control 9")
+        try {
+          await context.sync();
+          console.log("preparing to create content control 10")
+          return fillContent(context, cc);
+        } catch(e){
+          console.error("Failed to create content control during sync",e)
+        }
+      } else {
+        console.log("Existing content control found")
+        return fillContent(context, cc);
+      }
+    });
+
+  });
+
+
+  button2.addEventListener("click", function() {
+    Word['run'](async function(context) {
+      var doc = context.document;
+      var ccs = doc.contentControls.getByTag("EXAMPLE_TAG1");
+      ccs.load('appearance,' +
+          'cannotDelete,' +
+          'cannotEdit,' +
+          'color,' +
+          'id,' +
+          'placeHolderText,' +
+          'removeWhenEdited,' +
+          'title,' +
+          'text,' +
+          'type,' +
+          'style,' +
+          'tag,' +
+          'font/size,' +
+          'font/name,' +
+          'font/color');
+
+      await context.sync();
+      var cc = null;
+      if (ccs.items.length > 0) cc = ccs.items[ccs.items.length - 1]; //always get the last one - should only ever actually be one, but just in case...
+      if (cc) {
+        cc.cannotEdit = false;
+        cc.clear();
+        cc.cannotEdit = true;
+        await context.sync();
+      }
+    });
+
+  });
+
+  async function fillContent(context, cc) {
+    console.log("fillContent 1")
+    cc.cannotEdit = false;
+    for(let i=0; i < 4; i++) {
+      let entryPara = cc.insertParagraph("", Word.InsertLocation.end);
+      entryPara.alignment = Word.Alignment.left;
+      entryPara.lineSpacing = 2*12;
+      entryPara.firstLineIndent=-36;
+      entryPara.leftIndent=36;
+      let entryId = counter++;
+      let exampleText = "Example Text entry "+entryId+". All work and no play makes Jack a dull boy.   <b>All work and no play makes Jack a dull boy.</b>   All work and no play makes Jack a dull boy.   <i>All work and no play makes Jack a dull boy.</i>   All work and no play makes Jack a dull boy.   <u>All work and no play makes Jack a dull boy.</u>";
+      entryPara.insertHtml(exampleText, Word.InsertLocation.end);
+    }
+    console.log("fillContent 2")
+    cc.cannotEdit = true;
+    try {
+      await context.sync();
+      console.log("fillContent 3")
+    } catch(e) {
+      console.error("fillContent: sync failed",e);
+    }
+  }
+</script>
+</body>
+</html>
