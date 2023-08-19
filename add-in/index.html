@@ -136,12 +136,12 @@
     console.log("fillContent start")
     cc.cannotEdit = false;
     for(let i=0; i < 4; i++) {
-      let entryPara = cc.insertParagraph("", Word.InsertLocation.end);
+      let entryId = counter++;
+      let entryPara = cc.insertParagraph(""+entryId+": ", Word.InsertLocation.end);
       entryPara.alignment = Word.Alignment.left;
       entryPara.lineSpacing = 2*12;
       entryPara.firstLineIndent=-36;
       entryPara.leftIndent=36;
-      let entryId = counter++;
       let exampleText = "Example Text entry "+entryId+". All work and no play makes Jack a dull boy.   <b>All work and no play makes Jack a dull boy.</b>   All work and no play makes Jack a dull boy.   <i>All work and no play makes Jack a dull boy.</i>   All work and no play makes Jack a dull boy.   <u>All work and no play makes Jack a dull boy.</u>";
       entryPara.insertHtml(exampleText, Word.InsertLocation.end);
     }
